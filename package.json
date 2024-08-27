@@ -1,0 +1,12 @@
+{
+  "name": "cinema",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "fly deploy --local-only"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
