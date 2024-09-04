@@ -4,7 +4,7 @@
 #
 
 app = 'r0hin-cinema'
-primary_region = 'yyz'
+primary_region = 'ord'
 
 [http_service]
   internal_port = 11470
