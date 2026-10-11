@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "node webui/build.js",
+    "test": "node test/webui.test.js",
     "deploy": "fly deploy --local-only"
   },
   "keywords": [],

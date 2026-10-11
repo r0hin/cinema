@@ -64491,7 +64491,7 @@
         webUILocation =
           argv["webui-location"] ||
           process.env.WEBUI_LOCATION ||
-          "https://app.strem.io/shell-v4.4/",
+          "/ui/",
         cache = __webpack_require__(324),
         searchPaths = {
           ffmpeg: ["/usr/lib/jellyfin-ffmpeg/ffmpeg"],
@@ -64889,6 +64889,7 @@
               res.end(message));
         });
       }),
+        enginefs.router.use("/ui", require("./webui")),
         enginefs.router.get("/", function (req, res, next) {
           if (!req.headers.host) return next("No host header");
           var socketConstructor = req.socket.constructor.name,

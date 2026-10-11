@@ -33,8 +33,9 @@ ARG JELLYFIN_VERSION=4.4.1-4
 # COPY qemu-arm-static /usr/bin/qemu-arm-static
 
 
-# RUN apt update and install wget
-RUN apt -y update && apt -y install wget
+# Buster packages have moved to Debian's signed archive.
+RUN sed -i 's/deb.debian.org/archive.debian.org/g; /buster-updates/d' /etc/apt/sources.list \
+    && apt -y update && apt -y install wget
 RUN wget https://repo.jellyfin.org/archive/ffmpeg/debian/4.4.1-4/jellyfin-ffmpeg_4.4.1-4-buster_$(dpkg --print-architecture).deb -O jellyfin-ffmpeg_4.4.1-4-buster.deb
 RUN apt -y install ./jellyfin-ffmpeg_4.4.1-4-buster.deb
 RUN rm jellyfin-ffmpeg_4.4.1-4-buster.deb
@@ -42,6 +43,9 @@ RUN rm jellyfin-ffmpeg_4.4.1-4-buster.deb
 # This copy could will override the server.js that was downloaded with the one provided in this folder
 # for custom or manual builds if $VERSION argument is not empty.
 COPY . .
+
+# Host a pinned shell so the notification policy is applied before startup.
+RUN node webui/build.js && node test/webui.test.js
 
 VOLUME ["/root/.stremio-server"]
 
