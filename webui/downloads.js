@@ -22,7 +22,7 @@ function jsonRequest(url, method, headers, body) {
 }
 
 module.exports = function createDownloads(env = process.env, request = jsonRequest) {
-  const allowed = (env.CINEMA_DOWNLOAD_USERS || "").toLowerCase().split(",").filter(Boolean);
+  const allowed = (env.CINEMA_DOWNLOAD_USERS || "").toLowerCase().split(",").map(email => email.trim()).filter(Boolean);
   const enabled = !!(env.CINEMA_DOWNLOAD_API && env.CINEMA_DOWNLOAD_TOKEN && allowed.length);
   const sessions = new Map();
   function send(res, status, body) {
@@ -48,7 +48,9 @@ module.exports = function createDownloads(env = process.env, request = jsonReque
       if ((sessions.get(hash) || 0) < Date.now()) {
         const result = await request("https://api.strem.io/api/getUser", "POST",
           { "Content-Type": "application/json" }, JSON.stringify({ authKey: auth[1] }));
-        if (result.status !== 200 || result.body.error || !allowed.includes((result.body.result && result.body.result.email || "").toLowerCase())) {
+        const account = result.body && !result.body.error && result.body.result;
+        const email = account && typeof account.email === "string" ? account.email.trim().toLowerCase() : "";
+        if (result.status !== 200 || !allowed.includes(email)) {
           return send(res, 403, { error: "This Stremio account cannot save to compute-alt" });
         }
         for (const [key, expiry] of sessions) if (expiry < Date.now()) sessions.delete(key);
@@ -59,14 +61,16 @@ module.exports = function createDownloads(env = process.env, request = jsonReque
       if (req.method === "POST") {
         body = req.body && typeof req.body === "object" ? JSON.stringify(req.body) : await new Promise((resolve, reject) => {
           let data = "";
+          let bytes = 0;
           req.on("data", (chunk) => {
+            bytes += chunk.length;
+            if (bytes > 32768) return reject(Object.assign(new Error("Download request too large"), { status: 413 }));
             data += chunk;
-            if (data.length > 32768) reject(new Error("Download request too large"));
           });
           req.on("end", () => resolve(data));
           req.on("error", reject);
         });
-        if (body.length > 32768) return send(res, 413, { error: "Download request too large" });
+        if (Buffer.byteLength(body) > 32768) return send(res, 413, { error: "Download request too large" });
         try { JSON.parse(body); } catch (_) { return send(res, 400, { error: "Invalid JSON" }); }
       }
       const remote = new URL("/downloads" + (match[1] ? "/" + match[1] : ""), env.CINEMA_DOWNLOAD_API);
@@ -76,6 +80,6 @@ module.exports = function createDownloads(env = process.env, request = jsonReque
         "Content-Type": "application/json",
       }, body);
       send(res, result.status, result.body);
-    } catch (_) { send(res, 502, { error: "Cannot reach the download service. Try again shortly." }); }
+    } catch (error) { send(res, error.status === 413 ? 413 : 502, { error: error.status === 413 ? error.message : "Cannot reach the download service. Try again shortly." }); }
   };
 };

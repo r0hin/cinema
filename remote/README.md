@@ -72,15 +72,18 @@ names. A short job suffix distinguishes different releases and avoids overwrites
 
 ## Operations
 
-The deployed service is `/etc/systemd/system/cinema-downloads.service`, with code
-under `/opt/cinema-downloads` and a pinned RapidFuzz installed into
+The server utility now lives in [reelish](https://github.com/r0hin/reelish).
+`remote/requirements.txt` pins the tested source commit; Cinema keeps the REST
+integration and deployment configuration here.
+
+The deployed service is `/etc/systemd/system/cinema-downloads.service`, with a pinned reelish installed into
 `/home/ubuntu/.local/share/cinema-venv`. Nginx terminates TLS for both hostnames,
 disables proxy buffering for immediate streaming, and rate-limits incoming requests.
 Certbot's systemd timer renews the certificate. Ports 80/443 are allowed in the
 server's persistent iptables configuration.
 
 To install dependencies on another Ubuntu host, create a Python 3.8+ virtualenv
-and install `remote/requirements.txt`; curl is also required. Adapt the supplied
+and install `remote/requirements.txt`. Adapt the supplied
 service paths/user and nginx configuration before installing. Create Movies and
 the state folder, write a random 32+ character API token into the environment file,
 and enable the service. The supplied nginx configuration is the pre-TLS template;
@@ -107,3 +110,7 @@ python3 -m venv /tmp/cinema-test-venv
 The Python suite covers typo/remake/sequel matching, queue recovery, subtitle
 delays, local ranges/HEAD, incomplete-source proxying, transition to local bytes,
 manual library files, authentication, and private-address/path restrictions.
+
+The existing `CINEMA_MOVIES`, `CINEMA_STATE`, and `CINEMA_DOWNLOAD_TOKEN` environment
+variables remain supported by reelish, so the media library and queue database
+are preserved. New installations can use the `REELISH_*` settings documented there.

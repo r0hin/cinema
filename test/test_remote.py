@@ -1,9 +1,4 @@
-import importlib.util
-import io
-import json
 from pathlib import Path
-import socket
-import sys
 import tempfile
 import threading
 import unittest
@@ -12,9 +7,8 @@ from unittest.mock import patch
 from urllib.parse import urlsplit
 import http.client
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'remote'))
-import download_api as api
-from media import rank_titles, byte_range, open_source
+from reelish import api
+from reelish.media import rank_titles, byte_range, open_source
 
 
 class RemoteTests(unittest.TestCase):
@@ -60,37 +54,7 @@ class RemoteTests(unittest.TestCase):
             with self.subTest(url=url), self.assertRaises(ValueError):
                 api.public_address(url)
 
-    def test_completed_partial_file_restarts_from_zero(self):
-        target = Path(self.temp.name) / 'subtitle.part'
-        target.write_bytes(b'already-complete')
-        calls = []
-        def curl(command, **kwargs):
-            calls.append(command)
-            headers = Path(command[command.index('--dump-header') + 1])
-            if len(calls) == 1:
-                headers.write_text('HTTP/1.1 416\r\nContent-Range: bytes */16\r\n')
-                return __import__('subprocess').CompletedProcess(command, 22, b'416', b'')
-            headers.write_text('HTTP/1.1 200\r\n')
-            target.write_bytes(b'fresh-source-bytes')
-            return __import__('subprocess').CompletedProcess(command, 0, b'200', b'')
-        parsed = urlsplit('https://source.example/subtitle')
-        with patch.object(api, 'public_address', return_value=(parsed, 443, '1.1.1.1')), patch.object(api.subprocess, 'run', side_effect=curl):
-            api.transfer(parsed.geturl(), target, 1000)
-        self.assertIn('--continue-at', calls[0])
-        self.assertNotIn('--continue-at', calls[1])
-        self.assertEqual(target.read_bytes(), b'fresh-source-bytes')
 
-    def test_private_redirect_rejected_before_connecting(self):
-        target = Path(self.temp.name) / 'video.part'
-        parsed = urlsplit('https://source.example/video')
-        def curl(command, **kwargs):
-            Path(command[command.index('--dump-header') + 1]).write_text('HTTP/1.1 302\r\nLocation: http://169.254.169.254/metadata\r\n')
-            target.write_bytes(b'redirect')
-            return __import__('subprocess').CompletedProcess(command, 0, b'302', b'')
-        with patch.object(api, 'public_address', side_effect=[(parsed, 443, '1.1.1.1'), ValueError('private destination')]), patch.object(api.subprocess, 'run', side_effect=curl) as run:
-            with self.assertRaisesRegex(ValueError, 'private destination'):
-                api.transfer(parsed.geturl(), target, 1000)
-            self.assertEqual(run.call_count, 1)
 
     def seed(self, title='The Odyssey (2026)', status='complete'):
         payload = dict(title=title, videoUrl='https://origin.example/movie.mp4', subtitleUrl='https://origin.example/en.srt', subtitleDelay=0)
@@ -189,7 +153,7 @@ class RemoteTests(unittest.TestCase):
         self.addCleanup(origin.shutdown)
         parsed = urlsplit('http://origin.example:%s/movie' % origin.server_port)
         server = self.server()
-        with patch('media.open_source', wraps=open_source), patch('download_api.public_address', return_value=(parsed, origin.server_port, '127.0.0.1')):
+        with patch('reelish.media.open_source', wraps=open_source), patch('reelish.api.public_address', return_value=(parsed, origin.server_port, '127.0.0.1')):
             code, headers, data = self.request(server, '/media/' + job_id + '/video', headers={'Range': 'bytes=8-11'})
         self.assertEqual((code, data), (206, b'abcd'))
         self.assertEqual(headers['Content-Range'], 'bytes 8-11/100')
