@@ -34,8 +34,9 @@ flowchart LR
   against the source they started with. Original cookies/auth headers are not
   exposed to clients.
 - Playback URLs require no login, as required for direct IINA playback; download
-  creation and administrative endpoints require authentication. There is no
-  public library listing. Only files under Movies can be served.
+  creation and administrative endpoints require authentication. The root page
+  shows a live public library and download progress. Only files under Movies can
+  be served.
 
 Matching uses RapidFuzz edit/transposition, whole-title, token-order and partial
 similarity. It normalizes articles, punctuation, accents, number words and Roman
@@ -58,6 +59,10 @@ All endpoints below require `Authorization: Bearer <CINEMA_DOWNLOAD_TOKEN>`:
 - `POST /downloads` with `{title, videoUrl, subtitleUrl, subtitleDelay?, filename?}`
 - `GET /downloads/<id>` returns queued/downloading/complete/failed and saved bytes.
 - `GET /resolve/<query>` returns the top five title scores for diagnosis.
+
+Public `GET /` serves the live movie shelf; `GET /library` supplies titles,
+progress and playback/subtitle links. Source URLs, filesystem paths, and tokens
+are excluded from this public response.
 
 Cinema exposes `/ui/downloads` and `/ui/downloads/<id>` through its own backend.
 It verifies the browser's Stremio session using `getUser` and an account email
