@@ -1,0 +1,22 @@
+[Unit]
+Description=Cinema download REST API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=ubuntu
+Group=ubuntu
+EnvironmentFile=/etc/cinema-downloads.env
+ExecStart=/home/ubuntu/.local/share/cinema-venv/bin/python /opt/cinema-downloads/download_api.py
+Restart=always
+RestartSec=5
+KillMode=control-group
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/ubuntu/Movies /home/ubuntu/.local/state/cinema-downloads
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

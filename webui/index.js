@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
+const downloads = require("./downloads")();
 
 const assets = {
   "/": ["index.html", "text/html; charset=utf-8"],
@@ -13,6 +14,7 @@ for (const [filename] of Object.values(assets)) {
 }
 
 module.exports = function serveWebUI(req, res) {
+  if (/^\/downloads(?:\/|\?|$)/.test(req.url)) return downloads(req, res);
   if (req.method !== "GET" && req.method !== "HEAD") {
     res.writeHead(405, { Allow: "GET, HEAD" });
     res.end();

@@ -45,7 +45,7 @@ RUN rm jellyfin-ffmpeg_4.4.1-4-buster.deb
 COPY . .
 
 # Host a pinned shell so the notification policy is applied before startup.
-RUN node webui/build.js && node test/webui.test.js
+RUN node webui/build.js && node test/webui.test.js && node test/downloads.test.js
 
 VOLUME ["/root/.stremio-server"]
 

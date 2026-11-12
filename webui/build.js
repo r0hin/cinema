@@ -40,14 +40,18 @@ async function build() {
   const directory = path.join(__dirname, "dist");
   fs.mkdirSync(directory, { recursive: true });
   const policy = fs.readFileSync(path.join(__dirname, "suppress-notifications.js"), "utf8");
+  const remoteDownload = fs.readFileSync(path.join(__dirname, "remote-download.js"), "utf8");
   for (const [name, content] of downloaded) {
     let output = content;
     if (name === "index.html") {
       const script = '<script src="blob.js?ver=d81e11"></script>';
       output = content.toString("utf8")
         .replace('href="blob.css?ver=d81e11"', `href="${upstream}blob.css?ver=d81e11"`)
-        .replace(script, `${script}<script>${policy}</script>`);
+        .replace(script, `${script}<script>${policy}</script><script>${remoteDownload}</script>`)
+        .replace('<div id="streamingReport"', '<div cinema-download class="cinema-download"></div><div id="streamingReport"')
+        .replace('</head>', '<style>.cinema-download{display:inline-flex;align-items:center;position:relative;margin-right:12px}.cinema-download-button{font:inherit;font-size:13px;color:#fff;background:#5b3b91;border:1px solid #9274c4;border-radius:6px;padding:8px 12px;cursor:pointer;white-space:nowrap}.cinema-download-button:disabled{opacity:.65;cursor:default}.cinema-download-button:focus-visible{outline:2px solid white;outline-offset:3px}.cinema-download-status{position:absolute;bottom:45px;right:0;width:290px;max-height:100px;overflow:auto;padding:10px;background:rgba(20,16,30,.95);border-radius:6px;font-size:12px;line-height:1.4;pointer-events:none}</style></head>');
       if (!output.includes(policy)) throw new Error("Could not install the notification policy");
+      if (!output.includes('cinema-download class=')) throw new Error("Could not install the remote download button");
     }
     fs.writeFileSync(path.join(directory, name), output);
   }

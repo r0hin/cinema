@@ -71,6 +71,8 @@ async function testHTTP() {
     assert(index.body.includes('href="https://app.strem.io/shell-v4.4/blob.css?ver=d81e11"'));
     assert(index.body.indexOf('<script src="blob.js?ver=d81e11"></script>') < index.body.indexOf('$provide.decorator("toasts"'));
     assert(index.body.indexOf('$provide.decorator("toasts"') < index.body.indexOf("</head>"));
+    assert(index.body.includes('cinema-download class="cinema-download"'));
+    assert(index.body.includes('directive("cinemaDownload"'));
     const bundle = await request(server, "/blob.js?ver=d81e11");
     assert.strictEqual(bundle.status, 200);
     assert(bundle.body.includes('factory("toasts"'));
