@@ -119,3 +119,10 @@ manual library files, authentication, and private-address/path restrictions.
 The existing `CINEMA_MOVIES`, `CINEMA_STATE`, and `CINEMA_DOWNLOAD_TOKEN` environment
 variables remain supported by reelish, so the media library and queue database
 are preserved. New installations can use the `REELISH_*` settings documented there.
+
+The shelf shows added dates and resolution, with Link actions for Copy and
+Outplayer. Delete moves items into `Movies/.reelish-trash` and supports Undo.
+Management uses the separate `REELISH_MANAGE_TOKEN` in the service environment;
+it is stored in Bitwarden as **Reelish owner key**. The browser remembers it for
+the current tab after a successful deletion. Public browsing and playback do not
+require it. FFprobe (from FFmpeg) is installed for background resolution inspection.
