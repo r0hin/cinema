@@ -1,1 +1,1 @@
-reelish @ git+https://github.com/r0hin/reelish.git@eb62303a6e4868e3903a46b93f86bdd07c38569a
+reelish @ git+https://github.com/r0hin/reelish.git@7e54753a7cf136c33704d63bcdecb4d2e2ea0ef4
